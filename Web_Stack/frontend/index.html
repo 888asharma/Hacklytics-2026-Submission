@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClimaQuant</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --sf: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --sfmono: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+}
+[data-theme="dark"] {
+  --bg: #000000; --bg2: #1c1c1e; --bg3: #2c2c2e;
+  --surface: rgba(28,28,30,0.85); --surface2: rgba(44,44,46,0.7);
+  --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.16);
+  --text: #f5f5f7; --text2: #98989d; --text3: #48484a;
+  --accent: #2997ff; --accent2: #0a84ff; --accent-soft: rgba(41,151,255,0.14);
+  --green: #30d158; --green-soft: rgba(48,209,88,0.14);
+  --red: #ff453a; --red-soft: rgba(255,69,58,0.14);
+  --amber: #ffd60a; --amber-soft: rgba(255,214,10,0.12);
+  --shadow: 0 2px 20px rgba(0,0,0,0.5); --shadow2: 0 12px 60px rgba(0,0,0,0.7);
+}
+[data-theme="light"] {
+  --bg: #f5f5f7; --bg2: #ffffff; --bg3: #f0f0f2;
+  --surface: rgba(255,255,255,0.78); --surface2: rgba(245,245,247,0.7);
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.13);
+  --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+  --accent: #0071e3; --accent2: #0077ed; --accent-soft: rgba(0,113,227,0.10);
+  --green: #1d8348; --green-soft: rgba(40,205,65,0.11);
+  --red: #d70015; --red-soft: rgba(255,59,48,0.10);
+  --amber: #c85000; --amber-soft: rgba(255,149,0,0.11);
+  --shadow: 0 2px 16px rgba(0,0,0,0.08); --shadow2: 0 12px 48px rgba(0,0,0,0.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sf);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;}
+nav{position:fixed;top:0;left:0;right:0;height:52px;background:var(--surface);backdrop-filter:saturate(200%) blur(24px);-webkit-backdrop-filter:saturate(200%) blur(24px);border-bottom:.5px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:200;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:600;letter-spacing:-.4px;color:var(--text);text-decoration:none;}
+.nav-icon{width:28px;height:28px;background:linear-gradient(140deg,var(--accent),#5e5ce6);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.nav-links{display:flex;list-style:none;gap:1px;position:absolute;left:50%;transform:translateX(-50%);}
+.nav-links a{display:block;padding:5px 12px;border-radius:7px;font-size:13px;font-weight:400;color:var(--text2);text-decoration:none;transition:color .15s,background .15s;white-space:nowrap;}
+.nav-links a:hover{color:var(--text);background:var(--surface2);}
+.nav-links a.active{color:var(--text);background:var(--surface2);font-weight:500;}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:livepulse 3s infinite;}
+@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 50%,transparent);}60%{box-shadow:0 0 0 5px transparent;}}
+.theme-btn{width:32px;height:32px;border-radius:50%;border:.5px solid var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:background .15s;}
+.theme-btn:hover{background:var(--bg3);}
+.page{display:none;}
+.page.active{display:block;animation:fadein .32s cubic-bezier(.4,0,.2,1);}
+#page-home{display:none;flex-direction:column;align-items:center;justify-content:center;}
+#page-home.active{display:flex;animation:fadein .5s cubic-bezier(.4,0,.2,1);}
+@keyframes fadein{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 24px 80px;text-align:center;position:relative;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;}
+.orb1{width:700px;height:700px;background:radial-gradient(circle,#2997ff,transparent 65%);top:-220px;right:-180px;opacity:.3;}
+.orb2{width:600px;height:600px;background:radial-gradient(circle,#5e5ce6,transparent 65%);bottom:-200px;left:-160px;opacity:.25;}
+.orb3{width:400px;height:400px;background:radial-gradient(circle,#30d158,transparent 65%);top:42%;left:42%;opacity:.12;}
+[data-theme="light"] .orb{opacity:.15;}
+.hero-inner{position:relative;z-index:1;max-width:820px;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:var(--accent-soft);border:.5px solid rgba(41,151,255,.28);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--accent);margin-bottom:30px;letter-spacing:.1px;}
+.hero-badge-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;}
+.hero-title{font-size:clamp(50px,8vw,92px);font-weight:700;letter-spacing:-2.5px;line-height:1.02;color:var(--text);margin-bottom:22px;}
+.hero-title .grad{background:linear-gradient(135deg,var(--accent) 0%,#5e5ce6 45%,#30d158 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:19px;font-weight:400;color:var(--text2);max-width:540px;margin:0 auto 52px;line-height:1.55;letter-spacing:-.2px;}
+.hero-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:920px;margin:0 auto;}
+.hero-card{background:var(--surface);backdrop-filter:blur(20px);border:.5px solid var(--border2);border-radius:18px;padding:22px 18px;cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s;text-decoration:none;display:block;text-align:left;box-shadow:var(--shadow);}
+.hero-card:hover{transform:translateY(-5px) scale(1.01);box-shadow:var(--shadow2);}
+.hero-card-icon{width:36px;height:36px;border-radius:10px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.hero-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;letter-spacing:-.15px;line-height:1.3;}
+.hero-card-desc{font-size:11px;color:var(--text2);line-height:1.5;}
+.pw{max-width:1120px;margin:0 auto;padding:80px 24px 80px;}
+.ph{margin-bottom:44px;}
+.ph-eye{font-size:11px;font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.ph-title{font-size:38px;font-weight:700;letter-spacing:-1.2px;color:var(--text);line-height:1.1;margin-bottom:10px;}
+.ph-desc{font-size:15px;color:var(--text2);max-width:560px;line-height:1.55;}
+.card{background:var(--bg2);border:.5px solid var(--border);border-radius:18px;padding:24px;box-shadow:var(--shadow);transition:background .3s,border-color .3s;}
+.inset{background:var(--bg3);border:.5px solid var(--border);border-radius:12px;padding:14px 16px;}
+.slbl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stile{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);}
+.stile-lbl{font-size:11px;font-weight:500;color:var(--text2);margin-bottom:6px;}
+.stile-val{font-size:26px;font-weight:700;letter-spacing:-.8px;color:var(--text);line-height:1;}
+.stile-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+.ca{color:var(--accent)!important;}.cg{color:var(--green)!important;}.cr{color:var(--red)!important;}.cam{color:var(--amber)!important;}
+.fld{margin-bottom:14px;}
+.flbl{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block;}
+select,input[type="number"]{width:100%;background:var(--bg3);border:.5px solid var(--border2);border-radius:10px;color:var(--text);padding:10px 14px;font-family:var(--sf);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;}
+select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.selwrap{position:relative;}
+.selwrap::after{content:'';position:absolute;right:13px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--text3);pointer-events:none;}
+select option{background:var(--bg2);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:980px;font-family:var(--sf);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:none;letter-spacing:-.1px;white-space:nowrap;}
+.btn-p{background:var(--accent);color:#fff;}
+.btn-p:hover{filter:brightness(1.12);}
+.btn-s{background:var(--bg3);color:var(--text);border:.5px solid var(--border2);}
+.btn-s:hover{background:var(--surface2);}
+.btn:active{transform:scale(.97);}
+.btn-sm{padding:7px 14px;font-size:12px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.gs{display:grid;grid-template-columns:300px 1fr;gap:20px;}
+.gsr{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+.cw{position:relative;width:100%;height:260px;}
+.cwl{position:relative;width:100%;height:340px;}
+.formula{background:var(--bg3);border:.5px solid var(--border);border-radius:10px;padding:14px 16px;font-family:var(--sfmono);font-size:12px;color:var(--text2);line-height:1.9;margin:14px 0;}
+.formula .hl{color:var(--accent);font-weight:600;}
+.formula .cm{color:var(--text3);}
+.dtbl{width:100%;border-collapse:collapse;font-size:13px;}
+.dtbl th{text-align:left;padding:8px 14px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:.5px solid var(--border);}
+.dtbl td{padding:11px 14px;border-bottom:.5px solid var(--border);color:var(--text2);font-size:13px;}
+.dtbl tr:last-child td{border-bottom:none;}
+.dtbl tr:hover td{background:var(--bg3);}
+.td-p{color:var(--text);font-weight:500;}
+.reg-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.reg-tbl th{padding:7px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);border-bottom:.5px solid var(--border);text-align:left;}
+.reg-tbl td{padding:9px 10px;border-bottom:.5px solid var(--border);color:var(--text2);}
+.reg-tbl tr:last-child td{border-bottom:none;}
+.reg-tbl .sig{color:var(--green);font-weight:600;}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:600;}
+.bg{background:var(--green-soft);color:var(--green);}
+.br{background:var(--red-soft);color:var(--red);}
+.ba{background:var(--amber-soft);color:var(--amber);}
+.bb{background:var(--accent-soft);color:var(--accent);}
+.cmpblk{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:16px 0;}
+.cmps{background:var(--bg3);border:.5px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+.cmps.hl{background:var(--accent-soft);border-color:rgba(41,151,255,.25);}
+.cmps-lbl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.cmps-val{font-size:30px;font-weight:700;letter-spacing:-1px;color:var(--text);}
+.cmps.hl .cmps-val{color:var(--accent);}
+.cmps-sub{font-size:11px;color:var(--text2);margin-top:4px;}
+.cmps-vs{font-size:12px;font-weight:600;color:var(--text3);text-align:center;}
+.drow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.ditem{background:var(--bg3);border:.5px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;}
+.dlbl{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:4px;}
+.dval{font-size:18px;font-weight:700;letter-spacing:-.5px;}
+.chips{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+.chip{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:14px 18px;flex:1;min-width:140px;box-shadow:var(--shadow);}
+.chip-lbl{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.chip-val{font-size:22px;font-weight:700;letter-spacing:-.5px;}
+.sl-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:var(--bg3);border-radius:2px;outline:none;cursor:pointer;border:none;box-shadow:none;padding:0;width:auto;}
+input[type="range"]::-webkit-slider-runnable-track{background:var(--bg3);height:4px;border-radius:2px;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.1);margin-top:-7px;transition:transform .1s,box-shadow .1s;}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.1);box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.1);}
+.sl-disp{font-size:13px;font-weight:600;color:var(--accent);min-width:52px;text-align:right;letter-spacing:-.2px;}
+.gk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;}
+.gk-card{background:var(--bg3);border:.5px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.gk-sym{font-size:20px;color:var(--amber);margin-bottom:4px;font-style:italic;}
+.gk-name{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.gk-val{font-size:15px;font-weight:700;color:var(--text);margin-top:4px;}
+.res-box{background:var(--bg3);border:.5px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;}
+.res-price{font-size:56px;font-weight:700;letter-spacing:-2px;color:var(--text);line-height:1;margin-bottom:12px;}
+.res-meta{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text2);}
+.res-meta span{color:var(--accent);font-weight:600;}
+/* Derived sigma display pill */
+.sigma-pill{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:.5px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;}
+.sigma-pill-lbl{font-size:12px;color:var(--text2);}
+.sigma-pill-val{font-size:17px;font-weight:700;color:var(--amber);letter-spacing:-.3px;}
+.viz{background:var(--bg2);border:.5px solid var(--border);border-radius:18px;padding:24px;box-shadow:var(--shadow);margin-bottom:16px;}
+.viz-title{font-size:16px;font-weight:600;letter-spacing:-.3px;color:var(--text);margin-bottom:4px;}
+.viz-cap{font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.5;}
+.wave{display:flex;align-items:flex-end;gap:3px;height:100px;}
+.wb{flex:1;border-radius:2px 2px 0 0;min-height:4px;cursor:pointer;transition:opacity .15s;}
+.wb:hover{opacity:.65;}
+.wb.n{background:var(--accent);opacity:.55;}
+.wb.o{background:var(--red);opacity:.85;}
+.ticker-wrap{overflow:hidden;height:34px;background:var(--bg2);border-bottom:.5px solid var(--border);border-top:.5px solid var(--border);display:flex;align-items:center;margin-bottom:36px;}
+.ticker-tape{display:flex;gap:40px;animation:tk 35s linear infinite;white-space:nowrap;}
+.ti{font-size:12px;font-weight:400;color:var(--text2);display:flex;gap:8px;}
+.ti b{font-weight:600;color:var(--text);}
+.ti .up{color:var(--green);}
+.ti .dn{color:var(--red);}
+@keyframes tk{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.api-error{color:var(--red);font-size:12px;padding:8px 12px;background:var(--red-soft);border-radius:8px;margin-top:8px;}
+.gap{margin-top:20px;}
+.gapl{margin-top:32px;}
+hr.div{border:none;border-top:.5px solid var(--border);margin:20px 0;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+@media(max-width:900px){
+  .g2,.gs,.gsr{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .hero-cards{grid-template-columns:repeat(2,1fr);}
+  .hero-title{font-size:48px;}
+  .cmpblk{grid-template-columns:1fr;}
+  .cmps-vs{display:none;}
+  .nav-links{display:none;}
+  .gk-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#" onclick="pg('home',null)">
+    <div class="nav-icon">🌍</div>ClimaQuant
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="pg('home',this)" class="active">Home</a></li>
+    <li><a href="#" onclick="pg('vanilla',this)">Vanilla B-S</a></li>
+    <li><a href="#" onclick="pg('climate',this)">Climate B-S</a></li>
+    <li><a href="#" onclick="pg('dashboard',this)">Dashboard</a></li>
+    <li><a href="#" onclick="pg('calculator',this)">Calculator</a></li>
+    <li><a href="#" onclick="pg('research',this)">Research</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="live-dot" title="Live"></div>
+    <div class="theme-btn" onclick="toggleTheme()" id="tbtn">☀️</div>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+    <div class="hero-inner">
+      <div class="hero-badge"><div class="hero-badge-dot"></div>Hacklytics 2026 · Georgia Tech</div>
+      <h1 class="hero-title">Options Pricing<br><span class="grad">Meets Climate Risk</span></h1>
+      <p class="hero-sub">Black-Scholes conditioned on macro-climate volatility. Heating degree days, Palmer-Z index, and multivariate regression — all in one engine.</p>
+      <div class="hero-cards">
+        <a class="hero-card" href="#" onclick="pg('vanilla',document.querySelectorAll('.nav-links a')[1])">
+          <div class="hero-card-icon" style="background:linear-gradient(135deg,rgba(41,151,255,.2),rgba(41,151,255,.35))">📈</div>
+          <div class="hero-card-title">Vanilla Black-Scholes</div>
+          <div class="hero-card-desc">Historical sigma. Baseline option pricing.</div>
+        </a>
+        <a class="hero-card" href="#" onclick="pg('climate',document.querySelectorAll('.nav-links a')[2])">
+          <div class="hero-card-icon" style="background:linear-gradient(135deg,rgba(48,209,88,.2),rgba(48,209,88,.35))">🌡️</div>
+          <div class="hero-card-title">Climate-Adjusted</div>
+          <div class="hero-card-desc">Volatility conditioned on HDD, CDD, Palmer-Z.</div>
+        </a>
+        <a class="hero-card" href="#" onclick="pg('dashboard',document.querySelectorAll('.nav-links a')[3])">
+          <div class="hero-card-icon" style="background:linear-gradient(135deg,rgba(94,92,230,.2),rgba(94,92,230,.35))">📊</div>
+          <div class="hero-card-title">Live Dashboard</div>
+          <div class="hero-card-desc">All 29 companies. Both models. Delta view.</div>
+        </a>
+        <a class="hero-card" href="#" onclick="pg('calculator',document.querySelectorAll('.nav-links a')[4])">
+          <div class="hero-card-icon" style="background:linear-gradient(135deg,rgba(255,214,10,.2),rgba(255,214,10,.35))">🧮</div>
+          <div class="hero-card-title">Calculator</div>
+          <div class="hero-card-desc">Interactive B-S with Greeks output.</div>
+        </a>
+        <a class="hero-card" href="#" onclick="pg('research',document.querySelectorAll('.nav-links a')[5])">
+          <div class="hero-card-icon" style="background:linear-gradient(135deg,rgba(255,69,58,.2),rgba(255,69,58,.35))">🔬</div>
+          <div class="hero-card-title">Research & Viz</div>
+          <div class="hero-card-desc">Error analysis, distributions, regression.</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 1: VANILLA -->
+<div id="page-vanilla" class="page">
+  <div class="pw">
+    <div class="ph"><div class="ph-eye">Module 01 — vanilla_pricing.ipynb</div><h1 class="ph-title">Vanilla Black-Scholes</h1><p class="ph-desc">Historical volatility from daily returns. Single sigma per company. The baseline pricing engine.</p></div>
+    <div class="ticker-wrap"><div class="ticker-tape" id="ticker"></div></div>
+    <div class="gs">
+      <div class="card">
+        <div class="slbl">Parameters</div>
+        <div class="fld"><label class="flbl">Company</label><div class="selwrap"><select id="v-co" onchange="vCalc()"></select></div></div>
+        <div class="fld"><label class="flbl">Strike Price K (USD)</label><input type="number" id="v-K" value="215" step="0.5" oninput="vCalc()"></div>
+        <div class="fld"><label class="flbl">Time to Expiry T (Years)</label><input type="number" id="v-T" value="0.25" step="0.01" min="0.01" max="5" oninput="vCalc()"></div>
+        <div class="fld"><label class="flbl">Risk-Free Rate r</label><input type="number" id="v-r" value="0.05" step="0.001" min="0" max="0.2" oninput="vCalc()"></div>
+        <div class="formula"><span class="cm"># Black-Scholes Call</span><br><span class="hl">C</span> = S·N(d₁) − Ke⁻ʳᵀ·N(d₂)<br>d₁ = [ln(S/K)+(r+σ²/2)T] / σ√T<br>d₂ = d₁ − σ√T</div>
+        <div id="v-error" class="api-error" style="display:none"></div>
+      </div>
+      <div>
+        <div class="stats-row">
+          <div class="stile"><div class="stile-lbl">Stock Price (S)</div><div class="stile-val" id="v-S">—</div><div class="stile-sub">USD / share</div></div>
+          <div class="stile"><div class="stile-lbl">Hist. Volatility σ</div><div class="stile-val cam" id="v-sig">—</div><div class="stile-sub">annualized</div></div>
+          <div class="stile"><div class="stile-lbl">Moneyness</div><div class="stile-val" id="v-money">—</div><div class="stile-sub" id="v-moneypct">—</div></div>
+          <div class="stile"><div class="stile-lbl">Call Price (C)</div><div class="stile-val ca" id="v-C">—</div><div class="stile-sub">Black-Scholes</div></div>
+        </div>
+        <div class="card">
+          <div class="slbl">Call Price vs. Volatility σ</div>
+          <div class="cw"><canvas id="v-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="gapl"></div>
+    <div class="card"><div class="slbl">Historical Volatility — All 29 Companies</div><div class="cwl"><canvas id="v-all"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 2: CLIMATE -->
+<div id="page-climate" class="page">
+  <div class="pw">
+    <div class="ph">
+      <div class="ph-eye">Module 02 — Climate_coupling.ipynb + climate_pricing.ipynb</div>
+      <h1 class="ph-title">Climate-Conditioned Pricing</h1>
+      <p class="ph-desc">Replaces historical σ with a climate-predicted σ — select a company and set K, T, and r. Climate σ is derived automatically from the most recent NOAA-aligned data point for that company.</p>
+      <div style="margin-top:16px;max-width:720px;background:var(--bg3);border:1px solid var(--brd);border-radius:12px;padding:16px 20px;font-size:12px;color:var(--text2);line-height:1.7">
+        Standard Black-Scholes uses a fixed historical σ. Here, σ is predicted from each company's monthly rolling volatility regressed against NOAA climate data —
+        <strong style="color:var(--text)">HDD</strong> (Heating Degree Days),
+        <strong style="color:var(--text)">CDD</strong> (Cooling Degree Days), and
+        <strong style="color:var(--text)">Palmer-Z</strong> (drought index, negative = drought).
+        Climate inputs are date-aligned per company via pd.concat and the last fitted prediction is used as σ_climate. The resulting option price difference versus the historical baseline is the <em style="color:var(--accent)">climate premium</em>.
+      </div>
+    </div>
+    <div class="gs">
+      <div class="card">
+        <div class="slbl">Parameters</div>
+        <div class="fld"><label class="flbl">Company</label><div class="selwrap"><select id="c-co" onchange="cCalc()"></select></div></div>
+        <div class="fld"><label class="flbl">Strike Price K (USD)</label><input type="number" id="c-K" value="215" step="0.5" oninput="cCalc()"></div>
+        <div class="fld"><label class="flbl">Time to Expiry T (Years)</label><input type="number" id="c-T" value="0.25" step="0.01" min="0.01" max="5" oninput="cCalc()"></div>
+        <div class="fld"><label class="flbl">Risk-Free Rate r</label><input type="number" id="c-r" value="0.05" step="0.001" min="0" max="0.2" oninput="cCalc()"></div>
+        <div class="formula"><span class="cm"># Climate Regression Model</span><br><span class="hl">σₜ</span> = β₀ + β₁·σₜ₋₁<br>&nbsp;&nbsp;&nbsp;&nbsp;+ β₂·HDD + β₃·CDD<br>&nbsp;&nbsp;&nbsp;&nbsp;+ β₄·PalmerZ + ε<br><br><span class="cm"># HDD/CDD/Palmer matched from<br># NOAA data via pd.concat</span></div>
+        <div id="c-error" class="api-error" style="display:none"></div>
+      </div>
+      <div>
+        <div class="stats-row">
+          <div class="stile"><div class="stile-lbl">Stock Price (S)</div><div class="stile-val" id="c-S">—</div><div class="stile-sub">USD / share</div></div>
+          <div class="stile"><div class="stile-lbl">Climate σ</div><div class="stile-val cam" id="c-cs-tile">—</div><div class="stile-sub">annualised</div></div>
+          <div class="stile"><div class="stile-lbl">Hist. σ</div><div class="stile-val" id="c-hs-tile">—</div><div class="stile-sub">annualised</div></div>
+          <div class="stile"><div class="stile-lbl">Climate Price</div><div class="stile-val ca" id="c-cv">—</div><div class="stile-sub">Black-Scholes</div></div>
+        </div>
+        <div class="cmpblk">
+          <div class="cmps"><div class="cmps-lbl">Vanilla B-S</div><div class="cmps-val" id="c-vv">—</div><div class="cmps-sub">σ = <span id="c-vs">—</span></div></div>
+          <div class="cmps-vs">vs</div>
+          <div class="cmps hl"><div class="cmps-lbl">Climate-Adjusted</div><div class="cmps-val" id="c-cv2">—</div><div class="cmps-sub">σ_c = <span id="c-cs">—</span></div></div>
+        </div>
+
+        <div class="card gap"><div class="slbl">Call Price vs. Climate Volatility σ_c</div><div class="cw"><canvas id="c-chart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="gapl"></div>
+    <div class="card"><div class="slbl">Climate Volatility — All 29 Companies</div><div class="cwl"><canvas id="c-all"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PAGE 3: DASHBOARD -->
+<div id="page-dashboard" class="page">
+  <div class="pw">
+    <div class="ph"><div class="ph-eye">Module 03 — data_processing_test.ipynb</div><h1 class="ph-title">Executive Dashboard</h1><p class="ph-desc">Real-time comparison of vanilla vs. climate-adjusted pricing across all 29 companies.</p></div>
+    <div class="stats-row">
+      <div class="stile"><div class="stile-lbl">Companies</div><div class="stile-val">29</div><div class="stile-sub">Energy, tech, food</div></div>
+      <div class="stile"><div class="stile-lbl">Avg. Climate Uplift</div><div class="stile-val cg" id="d-avg-uplift">—</div><div class="stile-sub">Option price delta</div></div>
+      <div class="stile"><div class="stile-lbl">Avg. Sigma Uplift</div><div class="stile-val cam" id="d-avg-sigma">—</div><div class="stile-sub">Climate sigma premium</div></div>
+      <div class="stile"><div class="stile-lbl">Max Uplift</div><div class="stile-val ca" id="d-max-uplift" style="font-size:20px">—</div><div class="stile-sub" id="d-max-sub">climate premium</div></div>
+    </div>
+    <div class="card gapl"><div class="slbl">Climate Premium (%) by Company</div><div class="cwl"><canvas id="d-chart"></canvas></div></div>
+    <div class="card gapl">
+      <div class="slbl">Full Company Summary</div>
+
+      <!-- Legend / Key -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px 24px;margin:16px 0 22px;padding:18px 20px;background:var(--bg3);border-radius:12px;border:1px solid var(--brd)">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;font-weight:600;color:var(--text);letter-spacing:.3px">Historical Volatility</span>
+          <span style="font-size:11px;color:var(--text2);line-height:1.5">Standard deviation of log returns across the full life of available stock price data, annualised (×√252). Expressed as a percentage.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;font-weight:600;color:var(--text);letter-spacing:.3px">Climate Volatility</span>
+          <span style="font-size:11px;color:var(--text2);line-height:1.5">Monthly rolling sigma regressed against NOAA Heating Degree Days, Cooling Degree Days, and Palmer-Z drought index with one-period auto-regression (OLS). Expressed as a percentage.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;font-weight:600;color:var(--text);letter-spacing:.3px">Historical Option Price</span>
+          <span style="font-size:11px;color:var(--text2);line-height:1.5">ATM call option price from the Black-Scholes formula using historical volatility, current stock price as strike, r = 3.5%, T = 1 year.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;font-weight:600;color:var(--text);letter-spacing:.3px">Climate Option Price</span>
+          <span style="font-size:11px;color:var(--text2);line-height:1.5">ATM call option price from the same Black-Scholes formula but substituting climate volatility in place of historical volatility.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;font-weight:600;color:var(--text);letter-spacing:.3px">Climate Premium</span>
+          <span style="font-size:11px;color:var(--text2);line-height:1.5">Difference between the climate option price and the historical option price: Climate Option Price - Historical Option Price.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;font-weight:600;color:var(--text);letter-spacing:.3px">Premium %</span>
+          <span style="font-size:11px;color:var(--text2);line-height:1.5">Percentage difference between the climate option price and the historical option price: (Climate Price − Hist. Price) / Hist. Price × 100.</span>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto"><table class="dtbl"><thead><tr><th>Company</th><th>Stock Price</th><th>Historical Volatility</th><th>Climate Volatility</th><th>Historical Option Price</th><th>Climate Option Price</th><th>Climate Premium</th><th>Premium %</th></tr></thead><tbody id="d-tbody"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: CALCULATOR -->
+<div id="page-calculator" class="page">
+  <div class="pw">
+    <div class="ph"><div class="ph-eye">Module 04 — black_scholes_call() from climate_pricing.ipynb</div><h1 class="ph-title">Option Calculator</h1><p class="ph-desc">Select a company to load its real stock price and historically-derived volatility. Adjust S, K, r, and T freely — sigma is always calculated from the company's historical stock data.</p></div>
+    <div class="gsr">
+      <div>
+        <div class="res-box">
+          <div class="res-price" id="calc-res">—</div>
+          <div class="res-meta">
+            <div>d₁ = <span id="cd1">—</span></div>
+            <div>d₂ = <span id="cd2">—</span></div>
+            <div>N(d₁) = <span id="cnd1">—</span></div>
+            <div>N(d₂) = <span id="cnd2">—</span></div>
+          </div>
+        </div>
+        <div class="gk-grid">
+          <div class="gk-card"><div class="gk-sym">Δ</div><div class="gk-name">Delta</div><div class="gk-val" id="gd">—</div></div>
+          <div class="gk-card"><div class="gk-sym">Γ</div><div class="gk-name">Gamma</div><div class="gk-val" id="gg">—</div></div>
+          <div class="gk-card"><div class="gk-sym">ν</div><div class="gk-name">Vega</div><div class="gk-val" id="gv">—</div></div>
+          <div class="gk-card"><div class="gk-sym">Θ</div><div class="gk-name">Theta/day</div><div class="gk-val" id="gt">—</div></div>
+        </div>
+        <div class="card gapl"><div class="slbl">Option Price vs. Stock Price S</div><div class="cw"><canvas id="calc-chart"></canvas></div></div>
+        <div style="margin-top:14px;background:var(--bg3);border:1px solid var(--brd);border-radius:12px;padding:14px 16px;font-size:11px;color:var(--text2);line-height:1.75">
+          <div style="font-weight:700;color:var(--text);font-size:12px;margin-bottom:8px;letter-spacing:.3px">Greeks — Key</div>
+          <div><strong style="color:var(--text)">Δ Delta</strong> — Change in option price per $1 move in stock price. e.g. Δ = 0.6 means a $1 stock rise → $0.60 option rise.</div>
+          <div style="margin-top:5px"><strong style="color:var(--text)">Γ Gamma</strong> — Change in Delta per $1 move in stock price. Think of Delta as velocity and Gamma as acceleration of the option price. Higher Gamma = greater variability.</div>
+          <div style="margin-top:5px"><strong style="color:var(--text)">ν Vega</strong> — Change in option price per 1% change in volatility σ. e.g. Vega = 25 means σ rising from 49% → 50% adds $0.25 to the option price.</div>
+          <div style="margin-top:5px"><strong style="color:var(--text)">Θ Theta/day</strong> — Daily time decay of the option. Option value erodes as expiry approaches. e.g. Θ = −0.05 means the option loses ~$0.05 per day.</div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: inputs -->
+      <div class="card" style="align-self:start;position:sticky;top:68px">
+        <div class="slbl">Inputs</div>
+
+        <!-- Company selector -->
+        <div class="fld">
+          <label class="flbl">Company</label>
+          <div class="selwrap"><select id="calc-co" onchange="loadCompany()"></select></div>
+        </div>
+
+        <!-- Derived sigma display — read only -->
+        <div class="sigma-pill">
+          <span class="sigma-pill-lbl">Derived Volatility σ <span style="font-size:10px;color:var(--text3)">(from CSV)</span></span>
+          <span class="sigma-pill-val" id="calc-sigma-display">—</span>
+        </div>
+
+        <hr class="div">
+
+        <!-- Stock Price S -->
+        <div class="fld">
+          <label class="flbl">Stock Price S</label>
+          <div class="sl-row">
+            <input type="range" id="sl-S" min="10" max="1000" value="213" oninput="slS('S')">
+            <div class="sl-disp" id="sd-S">$213</div>
+          </div>
+          <input type="number" id="in-S" value="213.45" step="0.5" oninput="inS('S')">
+        </div>
+
+        <!-- Strike Price K -->
+        <div class="fld">
+          <label class="flbl">Strike Price K</label>
+          <div class="sl-row">
+            <input type="range" id="sl-K" min="10" max="1000" value="213" oninput="slS('K')">
+            <div class="sl-disp" id="sd-K">$213</div>
+          </div>
+          <input type="number" id="in-K" value="213.45" step="0.5" oninput="inS('K')">
+        </div>
+
+        <!-- Risk-Free Rate r -->
+        <div class="fld">
+          <label class="flbl">Risk-Free Rate r</label>
+          <div class="sl-row">
+            <input type="range" id="sl-r" min="0" max="20" value="3" oninput="slS('r')">
+            <div class="sl-disp" id="sd-r">3.5%</div>
+          </div>
+          <input type="number" id="in-r" value="0.035" step="0.001" oninput="inS('r')">
+        </div>
+
+        <!-- Time to Expiry T -->
+        <div class="fld">
+          <label class="flbl">Time to Expiry T (years)</label>
+          <div class="sl-row">
+            <input type="range" id="sl-T" min="1" max="200" value="100" oninput="slS('T')">
+            <div class="sl-disp" id="sd-T">1.00y</div>
+          </div>
+          <input type="number" id="in-T" value="1.00" step="0.01" oninput="inS('T')">
+        </div>
+
+        <div id="calc-error" class="api-error" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: RESEARCH -->
+<div id="page-research" class="page">
+  <div class="pw">
+    <div class="ph"><div class="ph-eye">Module 05 — sphinx_* + Climate_coupling.ipynb</div><h1 class="ph-title">Research & Visualization</h1><p class="ph-desc">Statistical validation of climate-adjusted option pricing. Error analysis, distributions, regression surfaces.</p></div>
+    <div class="viz"><div class="viz-title">Absolute Average Percent Error by Company</div><div class="viz-cap">Mean absolute % deviation between model-predicted and realized option prices.</div><div class="cw"><canvas id="r-mape"></canvas></div></div>
+
+    <!-- Distribution WITH outliers — per company slider -->
+    <div class="viz">
+      <div class="viz-title">Option Pricing Error Distribution — With Outliers</div>
+      <div class="viz-cap">Histogram of absolute % pricing error per yearly window, with Normal fit overlay. Select a company to explore its distribution.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="selwrap" style="width:220px"><select id="r-norm-co" onchange="buildNormChart()"></select></div>
+        <div style="font-size:12px;color:var(--text2)">n = <span id="r-norm-n" style="color:var(--text);font-weight:600">—</span> yearly windows &nbsp;|&nbsp; μ = <span id="r-norm-mu" style="color:var(--accent);font-weight:600">—</span> &nbsp;|&nbsp; σ = <span id="r-norm-sd" style="color:var(--amber);font-weight:600">—</span></div>
+      </div>
+      <div class="cw"><canvas id="r-norm"></canvas></div>
+    </div>
+
+    <!-- Distribution WITHOUT outliers — per company slider -->
+    <div class="viz">
+      <div class="viz-title">Option Pricing Error Distribution — Outliers Removed (IQR)</div>
+      <div class="viz-cap">Same distribution after IQR-based outlier removal. The distribution tightens, confirming model robustness under normal conditions.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="selwrap" style="width:220px"><select id="r-norm2-co" onchange="buildNorm2Chart()"></select></div>
+        <div style="font-size:12px;color:var(--text2)">n = <span id="r-norm2-n" style="color:var(--text);font-weight:600">—</span> yearly windows &nbsp;|&nbsp; μ = <span id="r-norm2-mu" style="color:var(--accent);font-weight:600">—</span> &nbsp;|&nbsp; σ = <span id="r-norm2-sd" style="color:var(--amber);font-weight:600">—</span></div>
+      </div>
+      <div class="cw"><canvas id="r-norm2"></canvas></div>
+    </div>
+    <!-- Historical sigma vs Climate sigma time series — per company slider -->
+    <div class="viz">
+      <div class="viz-title">Historical σ vs Climate-Adjusted σ Over Time</div>
+      <div class="viz-cap">Monthly rolling volatility (21-day window, annualised) vs OLS-predicted climate sigma. Select a company to explore.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="selwrap" style="width:220px"><select id="r-sigma-co" onchange="buildSigmaTS()"></select></div>
+        <div style="font-size:12px;color:var(--text2)">
+          Last hist. σ = <span id="r-sigma-last-hist" style="color:var(--amber);font-weight:600">—</span> &nbsp;|&nbsp;
+          Last climate σ = <span id="r-sigma-last-clim" style="color:var(--accent);font-weight:600">—</span>
+        </div>
+      </div>
+      <div class="cwl"><canvas id="r-sigma-ts"></canvas></div>
+    </div>
+
+    <div class="viz">
+      <div class="viz-title">Option-Pricing % Error Per Yearly Window</div>
+      <div class="viz-cap">Signed % change = (expiry price − S₀ − option price) / S₀ per yearly window. Red dots = IQR outliers. Yellow dashed line = avg |% error|. Top 3 outliers annotated.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="selwrap" style="width:220px"><select id="r-wave-co" onchange="buildWaveTS()"></select></div>
+        <div style="font-size:12px;color:var(--text2)">
+          n = <span id="r-wave-n" style="color:var(--text);font-weight:600">—</span> windows &nbsp;|&nbsp;
+          avg |err| = <span id="r-wave-avg" style="color:var(--amber);font-weight:600">—</span> &nbsp;|&nbsp;
+          outliers = <span id="r-wave-out" style="color:var(--red);font-weight:600">—</span>
+        </div>
+      </div>
+      <div class="cw"><canvas id="r-wave-chart"></canvas></div>
+      <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)"><div style="width:24px;height:2.5px;background:#2997ff;border-radius:2px"></div>% error</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:50%;background:#ff453a"></div>IQR outlier</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)"><div style="width:24px;height:2px;border-top:2px dashed #ffd60a"></div>Avg |err|</div>
+      </div>
+    </div>
+    <!-- 3D Climate Space per company — matches climate_coupling.ipynb Cell 2 scatter -->
+    <div class="viz">
+      <div class="viz-title">Climate Space — Cooling × Heating × Palmer-Z (Color = σ)</div>
+      <div class="viz-cap">Each point is a monthly observation. X = Cooling Degree Days, Y = Heating Degree Days, Z = Palmer-Z Index. Color = volatility σ (viridis: purple → green → yellow). Drag to rotate.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="selwrap" style="width:220px"><select id="r-3d-co" onchange="build3DScatter()"></select></div>
+        <div style="font-size:12px;color:var(--text2)">
+          n = <span id="r3d-count" style="color:var(--text);font-weight:600">—</span> months &nbsp;|&nbsp;
+          σ range: <span id="r3d-range" style="color:var(--amber);font-weight:600">—</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;font-size:11px;color:var(--text2)">
+          <span style="color:#440154">■</span> Low σ &nbsp;
+          <span style="color:#21908c">■</span> Mid σ &nbsp;
+          <span style="color:#fde725">■</span> High σ
+        </div>
+      </div>
+      <div style="width:100%;height:500px;border-radius:12px;overflow:hidden;background:var(--bg3);position:relative;cursor:grab;">
+        <canvas id="r-3d" style="width:100%;height:100%;display:block;"></canvas>
+        <div style="position:absolute;bottom:10px;right:14px;font-size:11px;color:var(--text3)">Drag to rotate</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// API LAYER
+// ═══════════════════════════════════════════════════════════════
+const API = 'http://localhost:8000';
+
+async function _post(path, body) {
+  const res = await fetch(API + path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  if (!res.ok) { const e = await res.json().catch(()=>({detail:res.statusText})); throw new Error(e.detail||`HTTP ${res.status}`); }
+  return res.json();
+}
+async function _get(path, params={}) {
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(API + path + (qs?'?'+qs:''));
+  if (!res.ok) { const e = await res.json().catch(()=>({detail:res.statusText})); throw new Error(e.detail||`HTTP ${res.status}`); }
+  return res.json();
+}
+const apiVanillaPrice = b => _post('/api/vanilla-price', b);
+const apiClimatePrice = b => _post('/api/climate-price', b);
+const apiCurrentPrice = (co) => _get('/api/current-price', co?{company:co}:{});
+const apiResearchData = () => _get('/api/research-data');
+const apiSigmas       = () => _get('/api/sigmas');
+
+function showErr(id,msg){const el=document.getElementById(id);if(el){el.textContent='⚠ '+msg;el.style.display='block';}}
+function hideErr(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const COS=["amazon","apple","bp","coke","cop","corteva","dowjones","enb","enph","eog","exxon","fslr","general_mills","gm","kmi","microsoft","nasdaq","next_era_energy","pepsi","plug","shell","sp500","target","tesla","total_energies","vde","walmart","wmb","xle"];
+const TK={amazon:"AMZN",apple:"AAPL",bp:"BP",coke:"KO",cop:"COP",corteva:"CTVA",dowjones:"DJI",enb:"ENB",enph:"ENPH",eog:"EOG",exxon:"XOM",fslr:"FSLR",general_mills:"GIS",gm:"GM",kmi:"KMI",microsoft:"MSFT",nasdaq:"IXIC",next_era_energy:"NEE",pepsi:"PEP",plug:"PLUG",shell:"SHEL",sp500:"SPX",target:"TGT",tesla:"TSLA",total_energies:"TTE",vde:"VDE",walmart:"WMT",wmb:"WMB",xle:"XLE"};
+
+let DASH_DATA = {};
+let CALC_SIGMA = 0;  // currently loaded sigma for calculator
+
+// ═══════════════════════════════════════════════════════════════
+// INLINE BS (calculator chart only — display values from API)
+// ═══════════════════════════════════════════════════════════════
+function erf(x){const a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911;const sg=x<0?-1:1;x=Math.abs(x);const t=1/(1+p*x);const y=1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);return sg*y;}
+function Nc(x){return .5*(1+erf(x/Math.sqrt(2)));}
+function Np(x){return Math.exp(-.5*x*x)/Math.sqrt(2*Math.PI);}
+function BS(S,K,r,sig,T){
+  if(T<=0||sig<=0||S<=0||K<=0)return{C:0,d1:0,d2:0,N1:.5,N2:.5,delta:.5,gamma:0,vega:0,theta:0};
+  const d1=(Math.log(S/K)+(r+.5*sig*sig)*T)/(sig*Math.sqrt(T)),d2=d1-sig*Math.sqrt(T);
+  const N1=Nc(d1),N2=Nc(d2),C=S*N1-K*Math.exp(-r*T)*N2;
+  return{C,d1,d2,N1,N2,delta:N1,gamma:Np(d1)/(S*sig*Math.sqrt(T)),vega:S*Np(d1)*Math.sqrt(T),theta:-(S*Np(d1)*sig)/(2*Math.sqrt(T))-r*K*Math.exp(-r*T)*N2};
+}
+
+// ═══════════════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════════════
+const dark=()=>document.documentElement.getAttribute('data-theme')==='dark';
+function toggleTheme(){
+  const nd=dark()?'light':'dark';
+  document.documentElement.setAttribute('data-theme',nd);
+  document.getElementById('tbtn').textContent=nd==='dark'?'☀️':'🌙';
+  rebuildAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════════
+function pg(id,lnk){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  const el=document.getElementById('page-'+id);
+  if(el)el.classList.add('active');
+  if(lnk&&lnk.classList)lnk.classList.add('active');
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POPULATE SELECTS
+// ═══════════════════════════════════════════════════════════════
+function popSels(){
+  ['v-co','c-co','calc-co'].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    COS.forEach(c=>{
+      const o=document.createElement('option');
+      o.value=c;
+      o.textContent=TK[c]+' — '+c.charAt(0).toUpperCase()+c.slice(1).replace(/_/g,' ');
+      el.appendChild(o);
+    });
+    el.value='apple';
+  });
+  document.getElementById('c-co').value='exxon';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TICKER
+// ═══════════════════════════════════════════════════════════════
+function buildTicker(rows){
+  const items=rows.slice(0,16).map(d=>{
+    const chg=d.change_pct||0;
+    return `<div class="ti"><b>${d.ticker||TK[d.company]}</b><span class="${chg>=0?'up':'dn'}">${chg>=0?'+':''}${chg.toFixed(2)}%</span></div>`;
+  }).join('');
+  document.getElementById('ticker').innerHTML=items+items;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHART OPTIONS HELPER
+// ═══════════════════════════════════════════════════════════════
+function co(extra={}){
+  const d=dark(),gc=d?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.05)',tc=d?'#636366':'#8e8e93';
+  const tb=d?'#2c2c2e':'#ffffff',tt=d?'#f5f5f7':'#1d1d1f',tbd=d?'#98989d':'#6e6e73';
+  return{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:tb,titleColor:tt,bodyColor:tbd,borderColor:d?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)',borderWidth:.5,padding:12,cornerRadius:10}},
+    scales:{x:{ticks:{color:tc,font:{size:10},maxRotation:extra.rot?55:0,minRotation:extra.rot?55:0},grid:{color:gc},border:{color:'transparent'}},y:{ticks:{color:tc,font:{size:11}},grid:{color:gc},border:{color:'transparent'}}},
+    ...extra};
+}
+Chart.defaults.font.family='-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif';
+const AC=()=>dark()?'#2997ff':'#0071e3';
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE 1: VANILLA
+// ═══════════════════════════════════════════════════════════════
+let vC1,vC2,vCalcTimer;
+async function vCalc(){clearTimeout(vCalcTimer);vCalcTimer=setTimeout(_vCalcRun,350);}
+async function _vCalcRun(){
+  const c=document.getElementById('v-co').value;
+  const K=+document.getElementById('v-K').value;
+  const T=+document.getElementById('v-T').value;
+  const r=+document.getElementById('v-r').value;
+  hideErr('v-error');
+  try{
+    const res=await apiVanillaPrice({company:c,strike:K,maturity:T,r});
+    document.getElementById('v-S').textContent='$'+res.stock_price.toFixed(2);
+    document.getElementById('v-sig').textContent=(res.sigma*100).toFixed(1)+'%';
+    document.getElementById('v-C').textContent='$'+res.option_price.toFixed(2);
+    document.getElementById('v-money').textContent=res.moneyness||'—';
+    document.getElementById('v-moneypct').textContent=(res.moneyness_pct>=0?'+':'')+(res.moneyness_pct||0).toFixed(1)+'%';
+    buildVC(res.stock_price,K,r,T,res.sigma);
+  }catch(e){showErr('v-error',e.message);}
+}
+function buildVC(S,K,r,T,sigma){
+  if(vC1)vC1.destroy();
+  const sigs=Array.from({length:40},(_,i)=>.05+i*.025);
+  const ctx=document.getElementById('v-chart').getContext('2d');
+  vC1=new Chart(ctx,{type:'line',data:{labels:sigs.map(s=>(s*100).toFixed(0)+'%'),datasets:[{data:sigs.map(s=>BS(S,K,r,s,T).C),borderColor:AC(),backgroundColor:dark()?'rgba(41,151,255,0.08)':'rgba(0,113,227,0.07)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:co({scales:{x:{ticks:{maxRotation:0},title:{display:true,text:'Volatility σ',color:dark()?'#636366':'#8e8e93'}},y:{title:{display:true,text:'Call Price ($)',color:dark()?'#636366':'#8e8e93'}}}})});
+}
+async function buildVAll(){
+  try{
+    const sigmas=await apiSigmas();
+    if(vC2)vC2.destroy();
+    const ctx=document.getElementById('v-all').getContext('2d');
+    const vals=COS.map(c=>sigmas[c]?+(sigmas[c]*100).toFixed(2):0);
+    vC2=new Chart(ctx,{type:'bar',data:{labels:COS.map(c=>TK[c]),datasets:[{data:vals,backgroundColor:vals.map(v=>v>40?dark()?'rgba(255,69,58,0.7)':'rgba(215,0,21,0.6)':v>28?dark()?'rgba(255,149,0,0.7)':'rgba(200,80,0,0.6)':dark()?'rgba(41,151,255,0.7)':'rgba(0,113,227,0.65)'),borderRadius:5,borderSkipped:false}]},options:co({rot:true,scales:{y:{title:{display:true,text:'Volatility (%)',color:dark()?'#636366':'#8e8e93'}}}})});
+  }catch(e){console.warn('buildVAll:',e);}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE 2: CLIMATE
+// ═══════════════════════════════════════════════════════════════
+let cC1, cCallChart, cAllChart, cCalcTimer;
+async function cCalc(){clearTimeout(cCalcTimer);cCalcTimer=setTimeout(_cCalcRun,350);}
+async function _cCalcRun(){
+  const c  = document.getElementById('c-co').value;
+  const K  = +document.getElementById('c-K').value;
+  const T  = +document.getElementById('c-T').value;
+  const r  = +document.getElementById('c-r').value;
+  hideErr('c-error');
+  try{
+    // No HDD/CDD/Palmer — backend uses pd.concat aligned NOAA data via model.predict(X).iloc[-1]
+    const res = await apiClimatePrice({company:c, strike:K, maturity:T, r});
+    const S   = res.stock_price || 0;
+    document.getElementById('c-S').textContent       = '$'+S.toFixed(2);
+    document.getElementById('c-vv').textContent      = '$'+res.vanilla_price.toFixed(2);
+    document.getElementById('c-cv').textContent      = '$'+res.climate_price.toFixed(2);
+    document.getElementById('c-cv2').textContent     = '$'+res.climate_price.toFixed(2);
+    document.getElementById('c-cs-tile').textContent = (res.climate_sigma*100).toFixed(2)+'%';
+    document.getElementById('c-hs-tile').textContent = (res.vanilla_sigma*100).toFixed(2)+'%';
+    document.getElementById('c-vs').textContent      = (res.vanilla_sigma*100).toFixed(2)+'%';
+    document.getElementById('c-cs').textContent      = (res.climate_sigma*100).toFixed(2)+'%';
+
+
+    // Call price vs σ_c sensitivity curve — mirrors vanilla page
+    buildCCallChart(res.climate_sigma, S, K, r, T);
+  }catch(e){showErr('c-error',e.message);}
+}
+
+function buildCCallChart(climateSigma, S, K, r, T){
+  if(cCallChart) cCallChart.destroy();
+  const ctx = document.getElementById('c-chart').getContext('2d');
+  const d   = dark();
+  const sigmas=[], prices=[];
+  for(let s=0.01; s<=2.0; s+=0.02){
+    sigmas.push(+(s*100).toFixed(1));
+    const d1=(Math.log(S/K)+(r+0.5*s*s)*T)/(s*Math.sqrt(T));
+    const d2=d1-s*Math.sqrt(T);
+    const nd1=0.5*(1+erf(d1/Math.SQRT2)), nd2=0.5*(1+erf(d2/Math.SQRT2));
+    prices.push(+(S*nd1-K*Math.exp(-r*T)*nd2).toFixed(4));
+  }
+  const idx = sigmas.findIndex(s=>s>=(climateSigma*100-1));
+  cCallChart = new Chart(ctx,{
+    type:'line',
+    data:{labels:sigmas, datasets:[
+      {label:'Call Price (C)',data:prices,borderColor:d?'#2997ff':'#0071e3',borderWidth:2,pointRadius:0,tension:0.3,fill:false},
+      {label:'Current σ_c',data:sigmas.map((_,i)=>i===idx?prices[idx]:null),
+       pointBackgroundColor:d?'#ff9f0a':'#c85000',pointBorderColor:d?'#ff9f0a':'#c85000',
+       pointRadius:sigmas.map((_,i)=>i===idx?7:0),showLine:false},
+    ]},
+    options:co({plugins:{legend:{display:true,labels:{color:d?'#98989d':'#6e6e73',font:{size:11}}},
+      tooltip:{callbacks:{title:v=>'σ_c = '+v[0].label+'%',label:v=>'C = $'+v.parsed.y.toFixed(2)}}}})
+  });
+}
+
+function buildCC(){
+  // Climate σ bar chart — all companies (mirrors v-all on vanilla page)
+  // Guard: needs DASH_DATA populated by buildDash first
+  const el = document.getElementById('c-all');
+  if(!el) return;
+  const hasData = COS.some(c=>DASH_DATA[c]);
+  if(!hasData) return;
+  if(cAllChart) cAllChart.destroy();
+  const ctx = el.getContext('2d');
+  const d   = dark();
+  const labels   = COS.map(c=>TK[c]);
+  const climVals = COS.map(c=>DASH_DATA[c]?+(DASH_DATA[c].sigma_climate*100).toFixed(2):0);
+  const histVals = COS.map(c=>DASH_DATA[c]?+(DASH_DATA[c].sigma_hist*100).toFixed(2):0);
+  cAllChart = new Chart(ctx,{type:'bar',
+    data:{labels, datasets:[
+      {label:'Climate σ',data:climVals,
+       backgroundColor:d?'rgba(255,149,0,0.65)':'rgba(200,80,0,0.6)',
+       borderRadius:4,borderSkipped:false},
+      {label:'Hist. σ',data:histVals,
+       backgroundColor:d?'rgba(41,151,255,0.45)':'rgba(0,113,227,0.4)',
+       borderRadius:4,borderSkipped:false},
+    ]},
+    options:co({rot:true,plugins:{legend:{display:true,labels:{color:d?'#98989d':'#6e6e73',font:{size:11}}},
+      tooltip:{callbacks:{label:v=>v.dataset.label+': '+v.parsed.y.toFixed(2)+'%'}}}})
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE 3: DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+let dC1;
+async function buildDash(){
+  try{
+    const rows=await apiCurrentPrice();
+    rows.forEach(d=>{if(d.company)DASH_DATA[d.company]=d;});
+    const valid=rows.filter(d=>d.pct_diff!=null);
+    if(valid.length){
+      const avgUplift=valid.reduce((s,d)=>s+d.pct_diff,0)/valid.length;
+      const avgSigma=valid.reduce((s,d)=>s+(d.sigma_climate-d.sigma_hist)*100,0)/valid.length;
+      const maxRow=valid.reduce((mx,d)=>d.pct_diff>mx.pct_diff?d:mx,valid[0]);
+      document.getElementById('d-avg-uplift').textContent=(avgUplift>=0?'+':'')+avgUplift.toFixed(1)+'%';
+      document.getElementById('d-avg-sigma').textContent=(avgSigma>=0?'+':'')+avgSigma.toFixed(1)+'pp';
+      document.getElementById('d-max-uplift').textContent=maxRow.ticker||TK[maxRow.company];
+      document.getElementById('d-max-sub').textContent='+'+maxRow.pct_diff.toFixed(1)+'% climate premium';
+    }
+    const tb=document.getElementById('d-tbody');
+    tb.innerHTML='';
+    rows.forEach(d=>{
+      if(d.error)return;
+      const abs=d.abs_diff||0,pct=d.pct_diff||0;
+      tb.innerHTML+=`<tr>
+        <td class="td-p">${d.ticker||TK[d.company]}</td>
+        <td>$${(d.stock_price||0).toFixed(2)}</td>
+        <td>${((d.sigma_hist||0)*100).toFixed(2)}%</td>
+        <td style="color:var(--amber)">${((d.sigma_climate||0)*100).toFixed(2)}%</td>
+        <td>$${(d.vanilla_price||0).toFixed(2)}</td>
+        <td style="color:var(--accent)">$${(d.climate_price||0).toFixed(2)}</td>
+        <td style="color:${abs>=0?'var(--green)':'var(--red)'}">${abs>=0?'+':'-'}$${Math.abs(abs).toFixed(2)}</td>
+        <td><span class="badge ${pct>=0?'bg':'br'}">${pct>=0?'+':''}${pct.toFixed(1)}%</span></td>
+      </tr>`;
+    });
+    if(dC1)dC1.destroy();
+    const ctx=document.getElementById('d-chart').getContext('2d');
+    const deltas=rows.filter(d=>!d.error).map(d=>+(d.pct_diff||0).toFixed(2));
+    const labels=rows.filter(d=>!d.error).map(d=>d.ticker||TK[d.company]);
+    dC1=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:deltas,backgroundColor:deltas.map(v=>v>=0?dark()?'rgba(48,209,88,0.7)':'rgba(29,131,72,0.65)':dark()?'rgba(255,69,58,0.7)':'rgba(215,0,21,0.6)'),borderRadius:5,borderSkipped:false}]},options:co({rot:true,scales:{y:{title:{display:true,text:'% Option Price Δ',color:dark()?'#636366':'#8e8e93'}}}})});
+    buildTicker(rows);
+    buildCC();
+  }catch(e){console.error('buildDash:',e);}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE 4: CALCULATOR
+// Sigma is ALWAYS derived from the company CSV.
+// User controls S, K, r, T freely via sliders or number inputs.
+// ═══════════════════════════════════════════════════════════════
+let calcC, calcTimer;
+
+// Called when company dropdown changes — loads real stock price + sigma
+async function loadCompany(){
+  const c = document.getElementById('calc-co').value;
+  hideErr('calc-error');
+  try {
+    // Fetch sigma from CSV using notebook logic (std(log_returns)*sqrt(252))
+    // Pass current r and T so the API call is valid; sigma doesn't depend on them
+    const r = +document.getElementById('in-r').value || 0.035;
+    const T = +document.getElementById('in-T').value || 1;
+    const res = await apiVanillaPrice({company:c, strike:100, maturity:T, r});
+    const S     = res.stock_price;
+    const sigma = res.sigma;
+
+    CALC_SIGMA = sigma;
+    document.getElementById('calc-sigma-display').textContent = (sigma*100).toFixed(2)+'%';
+
+    // Pre-fill S and K=S (ATM) — user can change both
+    setCalcField('S', S, '$'+Math.round(S));
+    setCalcField('K', S, '$'+Math.round(S));
+    document.getElementById('sl-S').value = Math.min(1000, Math.round(S));
+    document.getElementById('sl-K').value = Math.min(1000, Math.round(S));
+
+    calcRun();
+  } catch(e) {
+    showErr('calc-error', e.message);
+  }
+}
+
+function setCalcField(id, numVal, dispVal){
+  document.getElementById('in-'+id).value  = typeof numVal==='number'?numVal.toFixed(2):numVal;
+  document.getElementById('sd-'+id).textContent = dispVal;
+}
+
+// Slider moved → update number input → recalculate
+function slS(p){
+  const sl=document.getElementById('sl-'+p),sd2=document.getElementById('sd-'+p),inp=document.getElementById('in-'+p),v=+sl.value;
+  if(p==='r'){inp.value=(v/100).toFixed(3);sd2.textContent=v.toFixed(1)+'%';}
+  else if(p==='T'){inp.value=(v/100).toFixed(2);sd2.textContent=(v/100).toFixed(2)+'y';}
+  else{inp.value=v.toFixed(2);sd2.textContent='$'+v;}
+  calcRun();
+}
+
+// Number typed → update slider → recalculate
+function inS(p){
+  const inp=document.getElementById('in-'+p),sl=document.getElementById('sl-'+p),sd2=document.getElementById('sd-'+p),v=+inp.value;
+  if(p==='r'){sl.value=Math.round(v*100);sd2.textContent=(v*100).toFixed(1)+'%';}
+  else if(p==='T'){sl.value=Math.round(v*100);sd2.textContent=v.toFixed(2)+'y';}
+  else{sl.value=Math.round(v);sd2.textContent='$'+Math.round(v);}
+  calcRun();
+}
+
+// Recalculate using CALC_SIGMA (from CSV) + user-supplied S, K, r, T
+function calcRun(){
+  const S   = +document.getElementById('in-S').value;
+  const K   = +document.getElementById('in-K').value;
+  const r   = +document.getElementById('in-r').value;
+  const T   = +document.getElementById('in-T').value;
+  const sig = CALC_SIGMA;
+
+  if(!S||!K||!sig) return;
+
+  const res = BS(S, K, r, sig, T);
+  document.getElementById('calc-res').textContent='$'+res.C.toFixed(2);
+  document.getElementById('cd1').textContent=res.d1.toFixed(4);
+  document.getElementById('cd2').textContent=res.d2.toFixed(4);
+  document.getElementById('cnd1').textContent=res.N1.toFixed(4);
+  document.getElementById('cnd2').textContent=res.N2.toFixed(4);
+  document.getElementById('gd').textContent=res.delta.toFixed(3);
+  document.getElementById('gg').textContent=res.gamma.toFixed(4);
+  document.getElementById('gv').textContent=res.vega.toFixed(2);
+  document.getElementById('gt').textContent=(res.theta/365).toFixed(4);
+
+  if(calcC)calcC.destroy();
+  const xs=Array.from({length:60},(_,i)=>S*.5+i*(S*1.2/59));
+  const ctx=document.getElementById('calc-chart').getContext('2d');
+  calcC=new Chart(ctx,{type:'line',data:{labels:xs.map(x=>'$'+x.toFixed(0)),datasets:[
+    {label:'B-S Price',data:xs.map(x=>BS(x,K,r,sig,T).C),borderColor:AC(),backgroundColor:dark()?'rgba(41,151,255,0.09)':'rgba(0,113,227,0.07)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
+    {label:'Intrinsic',data:xs.map(x=>Math.max(0,x-K)),borderColor:dark()?'rgba(255,149,0,0.5)':'rgba(200,80,0,0.5)',borderDash:[5,4],fill:false,tension:0,pointRadius:0,borderWidth:1.5}
+  ]},options:co({plugins:{legend:{display:true,labels:{color:dark()?'#98989d':'#6e6e73',font:{size:11}}}}})});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3D SCATTER — Cooling × Heating × PalmerZ, color = sigma
+// Per-company dropdown, matches climate_coupling.ipynb Cell 2
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  let ALL_PTS = null;  // cached from API — null = not yet fetched
+  let CURRENT_PTS = [];
+  let rotX = 0.38, rotY = -0.52;
+  let dragging = false, lastMX = 0, lastMY = 0;
+  let raf = null;
+
+  // Viridis colormap matching matplotlib
+  function viridis(t){
+    t = Math.max(0, Math.min(1, t));
+    const c = [
+      [68,1,84],[72,22,101],[71,41,122],[64,67,135],[52,94,141],
+      [41,120,142],[32,143,140],[34,167,132],[66,190,113],[121,209,81],
+      [186,222,40],[253,231,37]
+    ];
+    const i = t*(c.length-1), lo=Math.floor(i), hi=Math.min(lo+1,c.length-1), f=i-lo;
+    return [
+      Math.round(c[lo][0]+(c[hi][0]-c[lo][0])*f),
+      Math.round(c[lo][1]+(c[hi][1]-c[lo][1])*f),
+      Math.round(c[lo][2]+(c[hi][2]-c[lo][2])*f),
+    ];
+  }
+
+  function proj(px,py,pz, cx,cy,cz, rX,rY, scale, ox,oy){
+    let dx=px-cx, dy=py-cy, dz=pz-cz;
+    let ax= dx*Math.cos(rY)+dz*Math.sin(rY), ay=dy, az=-dx*Math.sin(rY)+dz*Math.cos(rY);
+    let bx=ax, by=ay*Math.cos(rX)-az*Math.sin(rX), bz=ay*Math.sin(rX)+az*Math.cos(rX);
+    return { sx: ox+bx*scale, sy: oy-by*scale, depth: bz };
+  }
+
+  function draw(){
+    const canvas = document.getElementById('r-3d');
+    if(!canvas) return;
+    const wrap = canvas.parentElement;
+    const W = wrap.clientWidth  || 700;
+    const H = wrap.clientHeight || 500;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);  // reset + scale once cleanly
+
+    const d = dark();
+    ctx.fillStyle = d ? '#1c1c1e' : '#f0f0f2';
+    ctx.fillRect(0, 0, W, H);
+
+    const pts = CURRENT_PTS;
+    if(!pts || !pts.length){
+      ctx.fillStyle = d ? '#636366' : '#8e8e93';
+      ctx.font = '13px -apple-system,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('No data — ClimateData CSVs may be missing', W/2, H/2);
+      ctx.textAlign = 'left';
+      return;
+    }
+
+    const coolings=pts.map(p=>p.cooling), heatings=pts.map(p=>p.heating);
+    const palmers =pts.map(p=>p.palmer),  sigmas  =pts.map(p=>p.sigma);
+    const minC=Math.min(...coolings), maxC=Math.max(...coolings)||1;
+    const minH=Math.min(...heatings), maxH=Math.max(...heatings)||1;
+    const minP=Math.min(...palmers),  maxP=Math.max(...palmers) ||1;
+    const minS=Math.min(...sigmas),   maxS=Math.max(...sigmas)  ||1;
+    const n=(v,lo,hi)=>hi!==lo?(v-lo)/(hi-lo):0.5;
+
+    const SCALE=Math.min(W,H)*0.38;
+    const offX=W*0.44, offY=H*0.56;
+    const cx=0.5, cy=0.5, cz=0.5;
+
+    // Light grid on XY floor (z=0)
+    ctx.strokeStyle = d?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)';
+    ctx.lineWidth=0.5;
+    for(let g=0;g<=4;g++){
+      const v=g/4;
+      const a=proj(v,0,0,cx,cy,cz,rotX,rotY,SCALE,offX,offY);
+      const b=proj(v,1,0,cx,cy,cz,rotX,rotY,SCALE,offX,offY);
+      ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+      const c1=proj(0,v,0,cx,cy,cz,rotX,rotY,SCALE,offX,offY);
+      const c2=proj(1,v,0,cx,cy,cz,rotX,rotY,SCALE,offX,offY);
+      ctx.beginPath(); ctx.moveTo(c1.sx,c1.sy); ctx.lineTo(c2.sx,c2.sy); ctx.stroke();
+    }
+
+    // Axes: X=Cooling, Y=Heating, Z=PalmerZ  (matches notebook exactly)
+    const axes=[
+      {to:[1,0,0], label:'Cooling',  color:'#ff6b6b'},
+      {to:[0,1,0], label:'Heating',  color:'#ffd93d'},
+      {to:[0,0,1], label:'Palmer-Z', color:'#6bcb77'},
+    ];
+    const orig=proj(0,0,0,cx,cy,cz,rotX,rotY,SCALE,offX,offY);
+    axes.forEach(ax=>{
+      const e=proj(ax.to[0],ax.to[1],ax.to[2],cx,cy,cz,rotX,rotY,SCALE,offX,offY);
+      ctx.beginPath(); ctx.moveTo(orig.sx,orig.sy); ctx.lineTo(e.sx,e.sy);
+      ctx.strokeStyle=ax.color; ctx.lineWidth=2; ctx.setLineDash([5,4]); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle=ax.color; ctx.font='bold 11px -apple-system,sans-serif';
+      ctx.fillText(ax.label, e.sx+5, e.sy+4);
+    });
+
+    // Project, depth-sort (painter's algorithm), draw
+    const projected = pts.map(p=>({
+      ...proj(n(p.cooling,minC,maxC), n(p.heating,minH,maxH), n(p.palmer,minP,maxP),
+              cx,cy,cz, rotX,rotY, SCALE, offX,offY),
+      t: n(p.sigma,minS,maxS),
+    }));
+    projected.sort((a,b)=>a.depth-b.depth);
+
+    projected.forEach(p=>{
+      const [r,g,b2]=viridis(p.t);
+      ctx.beginPath(); ctx.arc(p.sx,p.sy,5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${r},${g},${b2},0.85)`; ctx.fill();
+      ctx.strokeStyle=`rgba(${r},${g},${b2},0.2)`; ctx.lineWidth=0.5; ctx.stroke();
+    });
+
+    // Colorbar
+    const lx=W-48, ly=H*0.1, lh=H*0.75;
+    const grad=ctx.createLinearGradient(0,ly+lh,0,ly);
+    for(let i=0;i<=10;i++){const[r,g,b2]=viridis(i/10);grad.addColorStop(i/10,`rgb(${r},${g},${b2})`);}
+    ctx.fillStyle=grad; ctx.fillRect(lx,ly,14,lh);
+    ctx.strokeStyle=d?'rgba(255,255,255,0.15)':'rgba(0,0,0,0.12)';
+    ctx.lineWidth=0.5; ctx.strokeRect(lx,ly,14,lh);
+    ctx.fillStyle=d?'#98989d':'#6e6e73';
+    ctx.font='10px -apple-system,sans-serif'; ctx.textAlign='left';
+    [0,0.25,0.5,0.75,1].forEach(f=>{
+      const sv=(minS+f*(maxS-minS))*100;
+      ctx.fillText(sv.toFixed(0)+'%', lx+18, ly+lh-f*lh+3);
+    });
+    ctx.save(); ctx.translate(lx+36,ly+lh/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center'; ctx.fillStyle=d?'#636366':'#aeaeb2';
+    ctx.font='10px -apple-system,sans-serif';
+    ctx.fillText('Volatility σ',0,0); ctx.restore(); ctx.textAlign='left';
+  }
+
+  window.build3DScatter = async function(){
+    // Fetch all data once
+    if(ALL_PTS === null){
+      try {
+        ALL_PTS = await _get('/api/scatter-3d');
+        console.log('[3D] fetched', ALL_PTS.length, 'points');
+      } catch(e){
+        console.error('[3D] fetch failed:', e);
+        ALL_PTS = [];
+      }
+    }
+
+    // Populate dropdown once
+    const sel = document.getElementById('r-3d-co');
+    if(sel && sel.options.length === 0){
+      COS.forEach(c=>{
+        const o=document.createElement('option');
+        o.value=c;
+        o.textContent=TK[c]+' — '+c.charAt(0).toUpperCase()+c.slice(1).replace(/_/g,' ');
+        sel.appendChild(o);
+      });
+      sel.value='apple';
+    }
+
+    const co = sel ? sel.value : null;
+    CURRENT_PTS = co ? ALL_PTS.filter(p=>p.company===co) : ALL_PTS;
+
+    const sigmas = CURRENT_PTS.map(p=>p.sigma*100);
+    document.getElementById('r3d-count').textContent = CURRENT_PTS.length;
+    document.getElementById('r3d-range').textContent = sigmas.length
+      ? Math.min(...sigmas).toFixed(1)+'% – '+Math.max(...sigmas).toFixed(1)+'%'
+      : '—';
+
+    // Wire interactions once
+    const canvas = document.getElementById('r-3d');
+    if(canvas && !canvas._3dReady){
+      canvas._3dReady = true;
+      canvas.addEventListener('mousedown', e=>{
+        dragging=true; lastMX=e.clientX; lastMY=e.clientY;
+        canvas.style.cursor='grabbing';
+      });
+      window.addEventListener('mouseup', ()=>{ dragging=false; canvas.style.cursor='grab'; });
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return;
+        rotY += (e.clientX-lastMX)*0.008;
+        rotX += (e.clientY-lastMY)*0.008;
+        rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+        lastMX=e.clientX; lastMY=e.clientY;
+        if(raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(draw);
+      });
+      let tX=0,tY=0;
+      canvas.addEventListener('touchstart',e=>{tX=e.touches[0].clientX;tY=e.touches[0].clientY;},{passive:true});
+      canvas.addEventListener('touchmove',e=>{
+        e.preventDefault();
+        rotY+=(e.touches[0].clientX-tX)*0.008; rotX+=(e.touches[0].clientY-tY)*0.008;
+        rotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,rotX));
+        tX=e.touches[0].clientX; tY=e.touches[0].clientY;
+        requestAnimationFrame(draw);
+      },{passive:false});
+      new ResizeObserver(()=>requestAnimationFrame(draw)).observe(canvas.parentElement);
+    }
+
+    draw();
+  };
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// SIGMA TIME SERIES CHART (Historical vs Climate — per company)
+// ═══════════════════════════════════════════════════════════════
+let sigmaTSChart;
+
+async function buildSigmaTS(){
+  const company = document.getElementById('r-sigma-co').value;
+  if(!company) return;
+  try {
+    const data = await _get('/api/sigma-timeseries', {company});
+    const d = dark();
+
+    // Update last-value display
+    const lh = data.hist_sigma[data.hist_sigma.length - 1];
+    const lc = data.climate_sigma[data.climate_sigma.length - 1];
+    document.getElementById('r-sigma-last-hist').textContent = lh.toFixed(1) + '%';
+    document.getElementById('r-sigma-last-clim').textContent = lc.toFixed(1) + '%';
+
+    if(sigmaTSChart) sigmaTSChart.destroy();
+    const ctx = document.getElementById('r-sigma-ts').getContext('2d');
+    sigmaTSChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [
+          {
+            label: 'Historical σ',
+            data: data.hist_sigma,
+            borderColor: d ? '#ffd60a' : '#c85000',
+            backgroundColor: d ? 'rgba(255,214,10,0.08)' : 'rgba(200,80,0,0.07)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false,
+          },
+          {
+            label: 'Climate-Adjusted σ',
+            data: data.climate_sigma,
+            borderColor: d ? '#2997ff' : '#0071e3',
+            backgroundColor: d ? 'rgba(41,151,255,0.08)' : 'rgba(0,113,227,0.07)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {display: true, labels: {color: d?'#98989d':'#6e6e73', font:{size:11}}},
+          tooltip: {
+            backgroundColor: d?'#2c2c2e':'#fff',
+            titleColor: d?'#f5f5f7':'#1d1d1f',
+            bodyColor: d?'#98989d':'#6e6e73',
+            borderColor: d?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.08)',
+            borderWidth: .5, cornerRadius: 10, padding: 10,
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {color: d?'#636366':'#8e8e93', font:{size:9}, maxRotation:45, minRotation:45,
+                    callback: (val, i, ticks) => i % Math.ceil(ticks.length/12) === 0 ? data.dates[i] : ''},
+            grid: {color: d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},
+            border: {color:'transparent'},
+            title: {display:true, text:'Month', color:d?'#636366':'#8e8e93'}
+          },
+          y: {
+            ticks: {color: d?'#636366':'#8e8e93', callback: v => v.toFixed(0)+'%'},
+            grid: {color: d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},
+            border: {color:'transparent'},
+            title: {display:true, text:'Annualised Volatility (%)', color:d?'#636366':'#8e8e93'}
+          }
+        }
+      }
+    });
+  } catch(e) {
+    console.warn('buildSigmaTS failed:', e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE 5: RESEARCH
+// ═══════════════════════════════════════════════════════════════
+let DIST_DATA = [];   // company_distributions cache
+let normC1, normC2;  // chart instances for the two dist charts
+
+function _buildDistChart(canvasId, coSelectId, nId, muId, sdId, key, chartRef){
+  const co = document.getElementById(coSelectId).value;
+  const entry = DIST_DATA.find(d => d.company === co);
+  if(!entry) return chartRef;
+  const dist = entry[key];
+  if(!dist) return chartRef;
+
+  document.getElementById(nId).textContent  = dist.n;
+  document.getElementById(muId).textContent = dist.mu.toFixed(1) + '%';
+  document.getElementById(sdId).textContent = dist.sd.toFixed(1) + '%';
+
+  if(chartRef) chartRef.destroy();
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const d   = dark();
+  const barColor = d ? 'rgba(41,151,255,0.55)' : 'rgba(0,113,227,0.50)';
+  const lineColor = d ? '#ff453a' : '#d70015';
+
+  return new Chart(ctx, {
+    data: {
+      labels: dist.bin_centers.map(v => v.toFixed(1)+'%'),
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Empirical',
+          data: dist.density,
+          backgroundColor: barColor,
+          borderRadius: 3,
+          borderSkipped: false,
+          barPercentage: 1,
+          categoryPercentage: 1,
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: `Normal fit (μ=${dist.mu.toFixed(1)}, σ=${dist.sd.toFixed(1)})`,
+          // Compute PDF at each bin center, then scale so curve peak matches histogram peak
+          data: (() => {
+            const mu = dist.mu, sd = dist.sd;
+            if(sd === 0) return dist.bin_centers.map(() => 0);
+            const raw = dist.bin_centers.map(bc =>
+              (1/(sd*Math.sqrt(2*Math.PI))) * Math.exp(-0.5*((bc-mu)/sd)**2)
+            );
+            // Scale: map raw PDF peak → histogram density peak so curve is always visible
+            const rawPeak = Math.max(...raw);
+            const histPeak = Math.max(...dist.density);
+            const scale = rawPeak > 0 ? histPeak / rawPeak : 1;
+            return raw.map(v => v * scale);
+          })(),
+          borderColor: lineColor,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.4,
+          fill: false,
+          yAxisID: 'y',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {display: true, labels: {color: d?'#98989d':'#6e6e73', font:{size:11}}},
+        tooltip: {backgroundColor: d?'#2c2c2e':'#fff', titleColor: d?'#f5f5f7':'#1d1d1f', bodyColor: d?'#98989d':'#6e6e73', borderColor: d?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.08)', borderWidth:.5, cornerRadius:10, padding:10}
+      },
+      scales: {
+        x: {ticks:{color:d?'#636366':'#8e8e93', font:{size:9}, maxRotation:45, minRotation:45}, grid:{color:d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'}, border:{color:'transparent'}, title:{display:true, text:'Absolute % Error', color:d?'#636366':'#8e8e93'}},
+        y: {ticks:{color:d?'#636366':'#8e8e93'}, grid:{color:d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'}, border:{color:'transparent'}, title:{display:true, text:'Density', color:d?'#636366':'#8e8e93'}}
+      }
+    }
+  });
+}
+
+function buildNormChart(){
+  normC1 = _buildDistChart('r-norm','r-norm-co','r-norm-n','r-norm-mu','r-norm-sd','with_outliers', normC1);
+}
+function buildNorm2Chart(){
+  normC2 = _buildDistChart('r-norm2','r-norm2-co','r-norm2-n','r-norm2-mu','r-norm2-sd','without_outliers', normC2);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WAVE TIME SERIES — matches sphinx_option_error_norm_dis.ipynb Cell 7
+// ═══════════════════════════════════════════════════════════════
+let _waveTSChart = null;
+
+function buildWaveTS(){
+  const co = document.getElementById('r-wave-co').value;
+  const entry = (window._WAVE_DATA||[]).find(d=>d.company===co);
+  if(!entry||!entry.windows.length) return;
+
+  const wins    = entry.windows;
+  const labels  = wins.map(w => w.year!=null ? String(w.year) : String(w.window_end_index));
+  const vals    = wins.map(w => w.pct_change);
+  const avgAbs  = entry.avg_abs;
+  const nOut    = wins.filter(w=>w.is_outlier).length;
+
+  document.getElementById('r-wave-n').textContent   = wins.length;
+  document.getElementById('r-wave-avg').textContent = avgAbs.toFixed(1)+'%';
+  document.getElementById('r-wave-out').textContent = nOut;
+
+  if(_waveTSChart){ _waveTSChart.destroy(); _waveTSChart=null; }
+
+  const d   = dark();
+  const ctx = document.getElementById('r-wave-chart').getContext('2d');
+
+  const outlierPoints = wins.map((w,i)=>w.is_outlier ? {x:labels[i],y:w.pct_change} : null).filter(Boolean);
+
+  _waveTSChart = new Chart(ctx, {
+    data:{
+      labels,
+      datasets:[
+        {
+          type:'line', label:'% error', data:vals,
+          borderColor: d?'#2997ff':'#0071e3',
+          backgroundColor:'transparent',
+          borderWidth:2, pointRadius:0, tension:0.25, order:2,
+        },
+        {
+          type:'scatter', label:'IQR outlier',
+          data: outlierPoints,
+          pointBackgroundColor:'#ff453a', pointBorderColor:'#ff453a',
+          pointRadius:6, pointHoverRadius:8, order:1,
+        },
+        {
+          type:'line', label:'Avg |err| '+avgAbs.toFixed(1)+'%',
+          data: wins.map(()=>avgAbs),
+          borderColor: d?'#ffd60a':'#c85000',
+          borderDash:[6,4], borderWidth:1.5,
+          pointRadius:0, tension:0, fill:false, order:3,
+        },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true, labels:{color:d?'#98989d':'#6e6e73', font:{size:11}}},
+        tooltip:{
+          backgroundColor:d?'#2c2c2e':'#fff', titleColor:d?'#f5f5f7':'#1d1d1f',
+          bodyColor:d?'#98989d':'#6e6e73',
+          borderColor:d?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.08)',
+          borderWidth:.5, cornerRadius:10, padding:10,
+          callbacks:{
+            label:ctx=>{
+              const w=wins[ctx.dataIndex];
+              if(!w) return ctx.parsed.y.toFixed(1)+'%';
+              return ['% error: '+w.pct_change.toFixed(1)+'%','abs: '+w.abs_pct_change.toFixed(1)+'%',w.is_outlier?'⚠ Outlier (IQR)':''].filter(Boolean);
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:d?'#636366':'#8e8e93',font:{size:10},maxRotation:45},grid:{color:d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},border:{color:'transparent'},title:{display:true,text:'Year',color:d?'#636366':'#8e8e93'}},
+        y:{ticks:{color:d?'#636366':'#8e8e93',callback:v=>v.toFixed(0)+'%'},grid:{color:d?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'},border:{color:'transparent'},title:{display:true,text:'% error',color:d?'#636366':'#8e8e93'}}
+      }
+    },
+    plugins:[{
+      afterDatasetsDraw(chart){
+        const meta=chart.getDatasetMeta(0);
+        const ctx2=chart.ctx;
+        ctx2.save();
+        ctx2.font='bold 10px -apple-system,sans-serif';
+        ctx2.fillStyle='#ff453a';
+        wins.forEach((w,i)=>{
+          if(!w.annotate) return;
+          const pt=meta.data[i];
+          if(!pt) return;
+          ctx2.fillText(w.pct_change.toFixed(1)+'%', pt.x+5, pt.y-7);
+        });
+        ctx2.restore();
+      }
+    }]
+  });
+}
+
+async function buildRes(){
+  try{
+    const data=await apiResearchData();
+    if(data.mape&&data.mape.length){
+      const mapes=data.mape.map(d=>d.mape);
+      const labels=data.mape.map(d=>d.ticker||d.company.toUpperCase());
+      const ctx1=document.getElementById('r-mape').getContext('2d');
+      new Chart(ctx1,{type:'bar',data:{labels,datasets:[{data:mapes,backgroundColor:mapes.map(v=>v>12?dark()?'rgba(255,69,58,0.7)':'rgba(215,0,21,0.6)':v>7?dark()?'rgba(255,149,0,0.7)':'rgba(200,80,0,0.6)':dark()?'rgba(41,151,255,0.7)':'rgba(0,113,227,0.65)'),borderRadius:4,borderSkipped:false}]},options:co({rot:true,scales:{y:{title:{display:true,text:'MAPE (%)',color:dark()?'#636366':'#8e8e93'}}}})});
+    }
+
+    // Per-company distribution charts
+    if(data.company_distributions && data.company_distributions.length){
+      DIST_DATA = data.company_distributions;
+      // Populate both selects
+      ['r-norm-co','r-norm2-co'].forEach(selId => {
+        const sel = document.getElementById(selId);
+        sel.innerHTML = '';
+        DIST_DATA.forEach(d => {
+          const o = document.createElement('option');
+          o.value = d.company;
+          o.textContent = d.ticker + ' — ' + d.company.charAt(0).toUpperCase() + d.company.slice(1).replace(/_/g,' ');
+          sel.appendChild(o);
+        });
+        sel.value = DIST_DATA[0]?.company || '';
+      });
+      buildNormChart();
+      buildNorm2Chart();
+    }
+
+    // Sigma time series — populate dropdown and render first company
+    const sigSel = document.getElementById('r-sigma-co');
+    sigSel.innerHTML = '';
+    COS.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c;
+      o.textContent = TK[c] + ' — ' + c.charAt(0).toUpperCase() + c.slice(1).replace(/_/g,' ');
+      sigSel.appendChild(o);
+    });
+    sigSel.value = 'apple';
+    buildSigmaTS();
+    if(data.pct_change_ts && data.pct_change_ts.length){
+      window._WAVE_DATA = data.pct_change_ts;
+      const sel = document.getElementById('r-wave-co');
+      sel.innerHTML = '';
+      data.pct_change_ts.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d.company;
+        o.textContent = (TK[d.company]||d.ticker) + ' — ' + d.company.charAt(0).toUpperCase() + d.company.slice(1).replace(/_/g,' ');
+        sel.appendChild(o);
+      });
+      sel.value = data.pct_change_ts[0].company;
+      buildWaveTS();
+    }
+    // 3D scatter — fetch real data from /api/scatter-3d
+    build3DScatter();
+
+  }catch(e){console.error('buildRes:',e);}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REBUILD ON THEME CHANGE
+// ═══════════════════════════════════════════════════════════════
+function rebuildAll(){
+  _vCalcRun();
+  buildVAll();
+  buildCC();
+  calcRun();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async ()=>{
+  popSels();
+  await buildDash();
+  await buildVAll();
+  buildCC();       // DASH_DATA now populated — render climate σ bar chart
+  _vCalcRun();
+  _cCalcRun();
+  loadCompany();   // loads apple sigma into calculator on startup
+  buildRes();
+});
+</script>
+</body>
+</html>
