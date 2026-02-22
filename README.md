@@ -167,14 +167,6 @@ Make sure the API URL in `frontend/index.html` is set to `http://localhost:8000`
 
 ---
 
-## Deployment
-
-- **Backend** — deployed on [Render](https://render.com) as a Python web service
-- **Frontend** — deployed on [Vercel](https://vercel.com) as a static site
-- Live at: `https://climaquant-app.vercel.app`
-
----
-
 ## Team
 
 Built at **Hacklytics 2026** — Georgia Tech's annual data science hackathon.
